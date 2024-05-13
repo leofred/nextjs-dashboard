@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { sql } from '@vercel/postgres';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { signIn } from '@/auth';
+import { signIn, signOut } from '@/auth';
 import { AuthError } from 'next-auth';
 
 const FormSchema = z.object({
@@ -110,7 +110,6 @@ export async function updateInvoice(
 }
 
 export async function deleteInvoice(id: string) {
-  throw new Error('Failed to Delete Invoice');
   try {
     await sql`DELETE FROM invoices WHERE id = ${id}`;
     revalidatePath('/dashboard/invoices');
@@ -134,6 +133,17 @@ export async function authenticate(
         default:
           return 'Something went wrong.';
       }
+    }
+    throw error;
+  }
+}
+
+export async function unauthenticate(prevState: string | undefined) {
+  try {
+    await signOut();
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return 'Something went wrong.';
     }
     throw error;
   }
